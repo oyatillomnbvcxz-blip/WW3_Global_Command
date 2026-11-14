@@ -1,0 +1,43 @@
+name: Build WW3 Android APK
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch: # Qo'lda tugma bosib APK yig'ish uchun
+
+jobs:
+  buildAndroid:
+    name: Build WW3 Global Command APK
+    runs-on: ubuntu-latest
+    steps:
+      - name: Loyihani yuklab olish (Checkout)
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Fayllarni keshlash (Tezroq yig'ish uchun)
+        uses: actions/cache@v4
+        with:
+          path: Library
+          key: Library-Android-${{ hashFiles('Assets/**', 'Packages/**', 'ProjectSettings/**') }}
+          restore-keys: |
+            Library-Android-
+
+      - name: Unity orqali Android APK yig'ish
+        uses: game-ci/unity-builder@v4
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        with:
+          targetPlatform: Android
+          unityVersion: 2022.3.40f1
+          androidExportType: androidPackage # To'g'ridan-to'g'ri .apk chiqaradi
+          buildsPath: build
+
+      - name: Tayyor APK faylni saqlash (Artifact)
+        uses: actions/upload-artifact@v4
+        with:
+          name: WW3-Global-Command-APK
+          path: build/Android/*.apk
+          retention-days: 14
